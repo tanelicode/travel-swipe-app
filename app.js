@@ -7,6 +7,9 @@ const startLocation = {
 let currentIndex = 0;
 let likedPlaces = [];
 
+let currentImageIndex = 0;
+let imageSliderInterval = null;
+
 const startScreen = document.getElementById("start-screen");
 const swipeScreen = document.getElementById("swipe-screen");
 const resultScreen = document.getElementById("result-screen");
@@ -20,6 +23,8 @@ const progressText = document.getElementById("progress-text");
 const progressBar = document.getElementById("progress-bar");
 
 const placeImage = document.getElementById("place-image");
+const imageDots = document.getElementById("image-dots");
+
 const placeName = document.getElementById("place-name");
 const placeDescription = document.getElementById("place-description");
 const placeCategory = document.getElementById("place-category");
@@ -48,11 +53,76 @@ function renderCurrentPlace() {
   const progressPercent = ((currentIndex + 1) / places.length) * 100;
   progressBar.style.width = `${progressPercent}%`;
 
-  placeImage.src = currentPlace.image;
-  placeImage.alt = currentPlace.name;
   placeName.textContent = currentPlace.name;
   placeDescription.textContent = currentPlace.description;
   placeCategory.textContent = currentPlace.category;
+
+  startImageSlider(currentPlace);
+}
+
+function startImageSlider(place) {
+  stopImageSlider();
+
+  currentImageIndex = 0;
+  renderCurrentImage(place);
+
+  if (!place.images || place.images.length <= 1) {
+    return;
+  }
+
+  imageSliderInterval = setInterval(() => {
+    currentImageIndex++;
+
+    if (currentImageIndex >= place.images.length) {
+      currentImageIndex = 0;
+    }
+
+    renderCurrentImage(place);
+  }, 2500);
+}
+
+function stopImageSlider() {
+  if (imageSliderInterval !== null) {
+    clearInterval(imageSliderInterval);
+    imageSliderInterval = null;
+  }
+}
+
+function renderCurrentImage(place) {
+  if (!place.images || place.images.length === 0) {
+    placeImage.src = "";
+    placeImage.alt = place.name;
+    imageDots.innerHTML = "";
+    return;
+  }
+
+  placeImage.src = place.images[currentImageIndex];
+  placeImage.alt = `${place.name} Bild ${currentImageIndex + 1}`;
+
+  renderImageDots(place.images.length);
+}
+
+function renderImageDots(imageCount) {
+  imageDots.innerHTML = "";
+
+  for (let i = 0; i < imageCount; i++) {
+    const dot = document.createElement("button");
+    dot.classList.add("image-dot");
+
+    if (i === currentImageIndex) {
+      dot.classList.add("active");
+    }
+
+    dot.setAttribute("aria-label", `Bild ${i + 1} anzeigen`);
+
+    dot.addEventListener("click", () => {
+      const currentPlace = places[currentIndex];
+      currentImageIndex = i;
+      renderCurrentImage(currentPlace);
+    });
+
+    imageDots.appendChild(dot);
+  }
 }
 
 function likeCurrentPlace() {
@@ -65,6 +135,8 @@ function dislikeCurrentPlace() {
 }
 
 function goToNextPlace() {
+  stopImageSlider();
+
   currentIndex++;
 
   if (currentIndex >= places.length) {
@@ -76,6 +148,8 @@ function goToNextPlace() {
 }
 
 function createRoute() {
+  stopImageSlider();
+
   showScreen(resultScreen);
   routeList.innerHTML = "";
 
@@ -154,10 +228,13 @@ function showScreen(screenToShow) {
 }
 
 function restartApp() {
+  stopImageSlider();
+
   currentIndex = 0;
   likedPlaces = [];
   routeList.innerHTML = "";
   resultSummary.textContent = "";
+  progressBar.style.width = "0%";
 
   showScreen(startScreen);
 }
