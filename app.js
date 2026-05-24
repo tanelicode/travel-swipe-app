@@ -10,6 +10,13 @@ let likedPlaces = [];
 let currentImageIndex = 0;
 let imageSliderInterval = null;
 
+let isDragging = false;
+let startX = 0;
+let currentX = 0;
+let moveX = 0;
+
+const swipeThreshold = 120;
+
 const startScreen = document.getElementById("start-screen");
 const swipeScreen = document.getElementById("swipe-screen");
 const resultScreen = document.getElementById("result-screen");
@@ -22,6 +29,7 @@ const restartBtn = document.getElementById("restart-btn");
 const progressText = document.getElementById("progress-text");
 const progressBar = document.getElementById("progress-bar");
 
+const card = document.getElementById("card");
 const placeImage = document.getElementById("place-image");
 const imageDots = document.getElementById("image-dots");
 
@@ -33,9 +41,14 @@ const resultSummary = document.getElementById("result-summary");
 const routeList = document.getElementById("route-list");
 
 selectHamburgBtn.addEventListener("click", startHamburg);
-likeBtn.addEventListener("click", likeCurrentPlace);
-dislikeBtn.addEventListener("click", dislikeCurrentPlace);
+likeBtn.addEventListener("click", () => swipeCard("right"));
+dislikeBtn.addEventListener("click", () => swipeCard("left"));
 restartBtn.addEventListener("click", restartApp);
+
+card.addEventListener("pointerdown", startDrag);
+card.addEventListener("pointermove", dragCard);
+card.addEventListener("pointerup", endDrag);
+card.addEventListener("pointerleave", endDrag);
 
 function startHamburg() {
   currentIndex = 0;
@@ -47,6 +60,8 @@ function startHamburg() {
 
 function renderCurrentPlace() {
   const currentPlace = places[currentIndex];
+
+  resetCardPosition();
 
   progressText.textContent = `${currentIndex + 1} von ${places.length} bewertet`;
 
@@ -115,7 +130,9 @@ function renderImageDots(imageCount) {
 
     dot.setAttribute("aria-label", `Bild ${i + 1} anzeigen`);
 
-    dot.addEventListener("click", () => {
+    dot.addEventListener("click", (event) => {
+      event.stopPropagation();
+
       const currentPlace = places[currentIndex];
       currentImageIndex = i;
       renderCurrentImage(currentPlace);
@@ -125,18 +142,100 @@ function renderImageDots(imageCount) {
   }
 }
 
-function likeCurrentPlace() {
-  likedPlaces.push(places[currentIndex]);
-  goToNextPlace();
+function startDrag(event) {
+  isDragging = true;
+  startX = event.clientX;
+  currentX = event.clientX;
+
+  card.classList.add("dragging");
+  card.setPointerCapture(event.pointerId);
 }
 
-function dislikeCurrentPlace() {
-  goToNextPlace();
+function dragCard(event) {
+  if (!isDragging) {
+    return;
+  }
+
+  currentX = event.clientX;
+  moveX = currentX - startX;
+
+  const rotate = moveX / 18;
+
+  card.style.transform = `translateX(${moveX}px) rotate(${rotate}deg)`;
+
+  updateSwipeFeedback(moveX);
+}
+
+function endDrag() {
+  if (!isDragging) {
+    return;
+  }
+
+  isDragging = false;
+  card.classList.remove("dragging");
+
+  if (moveX > swipeThreshold) {
+    swipeCard("right");
+    return;
+  }
+
+  if (moveX < -swipeThreshold) {
+    swipeCard("left");
+    return;
+  }
+
+  resetCardPosition();
+}
+
+function updateSwipeFeedback(distance) {
+  card.classList.remove("swipe-like", "swipe-dislike");
+
+  if (distance > 60) {
+    card.classList.add("swipe-like");
+  }
+
+  if (distance < -60) {
+    card.classList.add("swipe-dislike");
+  }
+}
+
+function swipeCard(direction) {
+  stopImageSlider();
+
+  card.classList.remove("swipe-like", "swipe-dislike");
+
+  if (direction === "right") {
+    likedPlaces.push(places[currentIndex]);
+    card.classList.add("swipe-out-right");
+  }
+
+  if (direction === "left") {
+    card.classList.add("swipe-out-left");
+  }
+
+  setTimeout(() => {
+    goToNextPlace();
+  }, 280);
+}
+
+function resetCardPosition() {
+  moveX = 0;
+  currentX = 0;
+  startX = 0;
+  isDragging = false;
+
+  card.classList.remove(
+    "dragging",
+    "swipe-like",
+    "swipe-dislike",
+    "swipe-out-left",
+    "swipe-out-right"
+  );
+
+  card.style.transform = "translateX(0) rotate(0deg)";
 }
 
 function goToNextPlace() {
-  stopImageSlider();
-
   currentIndex++;
 
   if (currentIndex >= places.length) {
@@ -236,5 +335,6 @@ function restartApp() {
   resultSummary.textContent = "";
   progressBar.style.width = "0%";
 
+  resetCardPosition();
   showScreen(startScreen);
 }
