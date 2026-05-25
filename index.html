@@ -6,6 +6,11 @@
 
   <title>Travel Swipe Hamburg</title>
 
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,6 +27,22 @@
 
       <button id="select-hamburg-btn" class="primary-btn">
         Hamburg entdecken
+      </button>
+    </section>
+
+    <section id="result-screen" class="screen">
+      <h2>Deine Route</h2>
+
+      <div class="result-card">
+        <p id="result-summary"></p>
+
+        <div id="route-map"></div>
+
+        <ol id="route-list"></ol>
+      </div>
+
+      <button id="restart-btn" class="secondary-btn">
+        Neu starten
       </button>
     </section>
 
@@ -80,6 +101,7 @@
 
   </main>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="data/hamburgPlaces.js"></script>
   <script src="app.js"></script>
 </body>

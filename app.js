@@ -7,6 +7,10 @@ const startLocation = {
 let currentIndex = 0;
 let likedPlaces = [];
 
+let routeMap = null;
+let routeLayerGroup = null;
+let routeTileLayer = null;
+
 let currentImageIndex = 0;
 let imageSliderInterval = null;
 
@@ -255,6 +259,8 @@ function createRoute() {
   if (likedPlaces.length === 0) {
     resultSummary.textContent =
       "Du hast keine Sehenswürdigkeit ausgewählt. Starte erneut und swipe mindestens eine Sehenswürdigkeit nach rechts.";
+
+    clearRouteMap();
     return;
   }
 
@@ -263,11 +269,13 @@ function createRoute() {
   resultSummary.textContent =
     `Du hast ${likedPlaces.length} Sehenswürdigkeit(en) ausgewählt. Startpunkt ist ${startLocation.name}.`;
 
-  optimizedRoute.forEach((place) => {
+  optimizedRoute.forEach((place, index) => {
     const listItem = document.createElement("li");
-    listItem.textContent = `${place.name} – ${place.category}`;
+    listItem.textContent = `${index + 1}. ${place.name} – ${place.category}`;
     routeList.appendChild(listItem);
   });
+
+  renderRouteMap(optimizedRoute);
 }
 
 function optimizeRoute(start, selectedPlaces) {
@@ -318,6 +326,57 @@ function toRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
 
+function renderRouteMap(routePlaces) {
+  const mapElement = document.getElementById("route-map");
+
+  if (!mapElement) {
+    console.error("Das Element #route-map wurde nicht gefunden.");
+    return;
+  }
+
+  if (!routeMap) {
+    routeMap = L.map("route-map");
+  }
+
+  if (!routeTileLayer) {
+    routeTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(routeMap);
+  }
+
+  if (routeLayerGroup) {
+    routeLayerGroup.clearLayers();
+  } else {
+    routeLayerGroup = L.layerGroup().addTo(routeMap);
+  }
+
+  const routePoints = [startLocation, ...routePlaces];
+  const latLngs = routePoints.map((point) => [point.lat, point.lng]);
+
+  routePoints.forEach((point, index) => {
+    const markerLabel =
+      index === 0 ? `Start: ${point.name}` : `${index}. ${point.name}`;
+
+    L.marker([point.lat, point.lng])
+      .addTo(routeLayerGroup)
+      .bindPopup(markerLabel);
+  });
+
+  L.polyline(latLngs, {
+    weight: 5,
+    opacity: 0.85
+  }).addTo(routeLayerGroup);
+
+  routeMap.fitBounds(latLngs, {
+    padding: [30, 30]
+  });
+
+  setTimeout(() => {
+    routeMap.invalidateSize();
+  }, 150);
+}
+
 function showScreen(screenToShow) {
   startScreen.classList.remove("active");
   swipeScreen.classList.remove("active");
@@ -335,6 +394,7 @@ function restartApp() {
   resultSummary.textContent = "";
   progressBar.style.width = "0%";
 
+  clearRoutMap();
   resetCardPosition();
   showScreen(startScreen);
 }
