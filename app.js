@@ -346,6 +346,38 @@ function calculateDistanceInKm(pointA, pointB) {
   return earthRadiusKm * c;
 }
 
+function calculateRouteStats(start, routePlaces) {
+  const walkingSpeedKmH = 4.8;
+  const segments = [];
+
+  let totalDistanceKm = 0;
+  let currentPoint = start;
+
+  routePlaces.forEach((place) => {
+    const distanceKm = calculateDistanceInKm(currentPoint, place);
+    const walkingMinutes = Math.round((distanceKm / walkingSpeedKmH) * 60);
+
+    totalDistanceKm += distanceKm;
+
+    segments.push({
+      from: currentPoint,
+      to: place,
+      distanceKm: distanceKm,
+      walkingMinutes: walkingMinutes
+    });
+
+    currentPoint = place;
+  });
+
+  const totalWalkingMinutes = Math.round((totalDistanceKm / walkingSpeedKmH) * 60);
+
+  return {
+    segments: segments,
+    totalDistanceKm: totalDistanceKm,
+    totalWalkingMinutes: totalWalkingMinutes
+  };
+}
+
 function toRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
