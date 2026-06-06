@@ -43,6 +43,10 @@ const placeCategory = document.getElementById("place-category");
 
 const resultSummary = document.getElementById("result-summary");
 const routeList = document.getElementById("route-list");
+const selectedCount = document.getElementById("selected-count");
+const startPoint = document.getElementById("start-point");
+const totalRouteInfo = document.getElementById("total-route-info");
+const routeItemTemplate = document.getElementById("route-item-template");
 
 selectHamburgBtn.addEventListener("click", startHamburg);
 likeBtn.addEventListener("click", () => swipeCard("right"));
@@ -257,25 +261,45 @@ function createRoute() {
   routeList.innerHTML = "";
 
   if (likedPlaces.length === 0) {
-    resultSummary.textContent =
-      "Du hast keine Sehenswürdigkeit ausgewählt. Starte erneut und swipe mindestens eine Sehenswürdigkeit nach rechts.";
+    selectedCount.textContent = "Keine Sehenswürdigkeit ausgewählt";
+    startPoint.textContent = "Starte erneut und swipe mindestens eine Sehenswürdigkeit nach rechts.";
+    totalRouteInfo.textContent = "";
 
     clearRouteMap();
     return;
   }
 
   const optimizedRoute = optimizeRoute(startLocation, likedPlaces);
+  const routeStats = calculateRouteStats(startLocation, optimizedRoute);
 
-  resultSummary.textContent =
-    `Du hast ${likedPlaces.length} Sehenswürdigkeit(en) ausgewählt. Startpunkt ist ${startLocation.name}.`;
+  selectedCount.textContent = `${likedPlaces.length} Sehenswürdigkeit(en) ausgewählt`;
+  startPoint.textContent = `Startpunkt: ${startLocation.name}`;
+  totalRouteInfo.textContent =
+    `Gesamtstrecke: ${routeStats.totalDistanceKm.toFixed(1)} km · ca. ${routeStats.totalWalkingMinutes} Min. zu Fuß`;
 
-  optimizedRoute.forEach((place, index) => {
-    const listItem = document.createElement("li");
-    listItem.textContent = `${index + 1}. ${place.name} – ${place.category}`;
-    routeList.appendChild(listItem);
+  routeStats.segments.forEach((segment, index) => {
+    const routeItem = createRouteListItem(segment, index);
+    routeList.appendChild(routeItem);
   });
 
   renderRouteMap(optimizedRoute);
+}
+
+function createRouteListItem(segment, index) {
+  const templateContent = routeItemTemplate.content.cloneNode(true);
+
+  const stepNumber = templateContent.querySelector(".route-step-number");
+  const placeName = templateContent.querySelector(".route-place-name");
+  const placeCategory = templateContent.querySelector(".route-place-category");
+  const placeDistance = templateContent.querySelector(".route-place-distance");
+
+  stepNumber.textContent = index + 1;
+  placeName.textContent = segment.to.name;
+  placeCategory.textContent = segment.to.category;
+  placeDistance.textContent =
+    `von ${segment.from.name}: ${segment.distanceKm.toFixed(1)} km · ca. ${segment.walkingMinutes} Min.`;
+
+  return templateContent;
 }
 
 function optimizeRoute(start, selectedPlaces) {
@@ -391,10 +415,12 @@ function restartApp() {
   currentIndex = 0;
   likedPlaces = [];
   routeList.innerHTML = "";
-  resultSummary.textContent = "";
+  selectedCount.textContent = "";
+  startPoint.textContent = "";
+  totalRouteInfo.textContent = "";
   progressBar.style.width = "0%";
 
-  clearRoutMap();
+  clearRouteMap();
   resetCardPosition();
   showScreen(startScreen);
 }

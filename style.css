@@ -184,6 +184,65 @@ p {
   overflow: hidden;
   background: var(--bg-card);
   box-shadow: var(--shadow-soft);
+  touch-action: pan-y;
+  user-select: none;
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.card.dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.card.swipe-like {
+  box-shadow: 0 18px 45px rgba(22, 163, 74, 0.35);
+}
+
+.card.swipe-dislike {
+  box-shadow: 0 18px 45px rgba(220, 38, 38, 0.35);
+}
+
+.card.swipe-out-right {
+  transform: translateX(520px) rotate(22deg) !important;
+  opacity: 0;
+}
+
+.card.swipe-out-left {
+  transform: translateX(-520px) rotate(-22deg) !important;
+  opacity: 0;
+}
+
+.card::before {
+  position: absolute;
+  top: 24px;
+  z-index: 5;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  opacity: 0;
+  transform: rotate(-8deg);
+  transition: opacity 0.16s ease;
+}
+
+.card.swipe-like::before {
+  content: "GEFÄLLT MIR";
+  left: 22px;
+  color: #166534;
+  background: rgba(220, 252, 231, 0.92);
+  border: 2px solid #16a34a;
+  opacity: 1;
+}
+
+.card.swipe-dislike::before {
+  content: "NICHT MEINS";
+  right: 22px;
+  color: #991b1b;
+  background: rgba(254, 226, 226, 0.92);
+  border: 2px solid #dc2626;
+  opacity: 1;
+  transform: rotate(8deg);
 }
 
 .image-slider {
@@ -213,6 +272,7 @@ p {
   border-radius: 999px;
   background: rgba(17, 24, 39, 0.35);
   backdrop-filter: blur(8px);
+  z-index: 4;
 }
 
 .image-dot {
@@ -286,6 +346,24 @@ p {
   background: white;
   box-shadow: var(--shadow-soft);
 }
+
+.route-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.route-summary strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.route-summary span {
+  font-size: 14px;
+}
+
 #route-map {
   width: 100%;
   height: 280px;
@@ -296,13 +374,56 @@ p {
 }
 
 #route-list {
-  padding-left: 22px;
-  line-height: 1.9;
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
 }
 
-#route-list li {
-  margin-bottom: 8px;
-  font-weight: 650;
+.route-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.route-item:last-child {
+  border-bottom: none;
+}
+
+.route-step-number {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.route-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.route-step-content strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.route-step-content span {
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.route-step-content small {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 @media (max-width: 480px) {
@@ -316,82 +437,10 @@ p {
   }
 
   .card {
-    position: relative;
-    flex: 1;
-    min-height: 500px;
-    border-radius: 30px;
-    overflow: hidden;
-    background: var(--bg-card);
-    box-shadow: var(--shadow-soft);
+    min-height: 470px;
   }
 
-  .card {
-  touch-action: pan-y;
-  user-select: none;
-  transition: transform 0.28s ease, opacity 0.28s ease;
-  }
-
-  .card.dragging {
-    transition: none;
-    cursor: grabbing;
-  }
-
-  .card.swipe-like {
-    box-shadow: 0 18px 45px rgba(22, 163, 74, 0.35);
-  }
-
-  .card.swipe-dislike {
-    box-shadow: 0 18px 45px rgba(220, 38, 38, 0.35);
-  }
-
-  .card.swipe-out-right {
-    transform: translateX(520px) rotate(22deg) !important;
-    opacity: 0;
-  }
-
-  .card.swipe-out-left {
-    transform: translateX(-520px) rotate(-22deg) !important;
-    opacity: 0;
-  }
-  .card::before {
-    position: absolute;
-    top: 24px;
-    z-index: 5;
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.8px;
-    opacity: 0;
-    transform: rotate(-8deg);
-    transition: opacity 0.16s ease;
-  }
-
-  .card.swipe-like::before {
-    content: "GEFÄLLT MIR";
-    left: 22px;
-    color: #166534;
-    background: rgba(220, 252, 231, 0.92);
-    border: 2px solid #16a34a;
-    opacity: 1;
-  }
-
-  .card.swipe-dislike::before {
-    content: "NICHT MEINS";
-    right: 22px;
-    color: #991b1b;
-    background: rgba(254, 226, 226, 0.92);
-    border: 2px solid #dc2626;
-    opacity: 1;
-    transform: rotate(8deg);
-  }
-
-
-  .card img {
-    width: 100%;
-    height: 330px;
-    object-fit: cover;
-    display: block;
-    background: #d1d5db;
+  .image-slider {
+    height: 300px;
   }
 }
