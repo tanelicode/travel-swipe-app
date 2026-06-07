@@ -433,6 +433,16 @@ function renderRouteMap(routePlaces) {
   }, 150);
 }
 
+function clearRouteMap() {
+  if (routeLayerGroup) {
+    routeLayerGroup.clearLayers();
+  }
+
+  if (routeMap) {
+    routeMap.setView([startLocation.lat, startLocation.lng], 13);
+  }
+}
+
 function showScreen(screenToShow) {
   startScreen.classList.remove("active");
   swipeScreen.classList.remove("active");
@@ -447,11 +457,13 @@ function restartApp() {
   currentIndex = 0;
   likedPlaces = [];
   routeList.innerHTML = "";
+
   selectedCount.textContent = "";
   startPoint.textContent = "";
   totalRouteInfo.textContent = "";
-  progressBar.style.width = "0%";
 
+  progressBar.style.width = "0%";
+  
   clearRouteMap();
   resetCardPosition();
   showScreen(startScreen);
