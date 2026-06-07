@@ -8,6 +8,7 @@ let currentCity = null;
 let places = [];
 let currentIndex = 0;
 let likedPlaces = [];
+let userStartLocation = null;
 
 let routeMap = null;
 let routeLayerGroup = null;
@@ -99,9 +100,12 @@ function useCurrentLocation() {
       console.log("Standort erhalten:", position.coords.latitude, position.coords.longitude);
 
       const userLocation = {
+        name: "Aktueller Standort",
         lat: position.coords.latitude,
         lng: position.coords.longitude
       };
+
+      userStartLocation = userLocation;
 
       const nearestCity = findNearestCity(userLocation);
 
@@ -176,10 +180,16 @@ function startCity(cityId) {
 
   currentIndex = 0;
   likedPlaces = [];
-
-  startLocation.name = `${currentCity.name} Zentrum`;
-  startLocation.lat = currentCity.lat;
-  startLocation.lng = currentCity.lng;
+  
+  if (userStartLocation) {
+    startLocation.name = userStartLocation.name;
+    startLocation.lat = userStartLocation.lat;
+    startLocation.lng = userStartLocation.lng;
+  } else {
+    startLocation.name = `${currentCity.name} Zentrum`;
+    startLocation.lat = currentCity.lat;
+    startLocation.lng = currentCity.lng;
+  }
 
   selectedCount.textContent = "";
   startPoint.textContent = "";
@@ -586,6 +596,8 @@ function restartApp() {
   places = [];
   currentIndex = 0;
   likedPlaces = [];
+  userStartLocation = null;
+
   routeList.innerHTML = "";
 
   selectedCount.textContent = "";
