@@ -4,6 +4,8 @@ const startLocation = {
   lng: 10.0069
 };
 
+let currentCity = null;
+let places = [];
 let currentIndex = 0;
 let likedPlaces = [];
 
@@ -25,7 +27,10 @@ const startScreen = document.getElementById("start-screen");
 const swipeScreen = document.getElementById("swipe-screen");
 const resultScreen = document.getElementById("result-screen");
 
-const selectHamburgBtn = document.getElementById("select-hamburg-btn");
+const cityList = document.getElementById("city-list");
+const useLocationBtn = document.getElementById("use-location-btn");
+const locationStatus = document.getElementById("location-status");
+
 const likeBtn = document.getElementById("like-btn");
 const dislikeBtn = document.getElementById("dislike-btn");
 const restartBtn = document.getElementById("restart-btn");
@@ -41,26 +46,149 @@ const placeName = document.getElementById("place-name");
 const placeDescription = document.getElementById("place-description");
 const placeCategory = document.getElementById("place-category");
 
-const resultSummary = document.getElementById("result-summary");
 const routeList = document.getElementById("route-list");
 const selectedCount = document.getElementById("selected-count");
 const startPoint = document.getElementById("start-point");
 const totalRouteInfo = document.getElementById("total-route-info");
 const routeItemTemplate = document.getElementById("route-item-template");
 
-selectHamburgBtn.addEventListener("click", startHamburg);
 likeBtn.addEventListener("click", () => swipeCard("right"));
 dislikeBtn.addEventListener("click", () => swipeCard("left"));
 restartBtn.addEventListener("click", restartApp);
+useLocationBtn.addEventListener("click", () => {
+  console.log("Standort-Button wurde geklickt");
+  useCurrentLocation()
+});
 
 card.addEventListener("pointerdown", startDrag);
 card.addEventListener("pointermove", dragCard);
 card.addEventListener("pointerup", endDrag);
 card.addEventListener("pointerleave", endDrag);
 
-function startHamburg() {
+renderCityButtons();
+
+function renderCityButtons() {
+  cityList.innerHTML = "";
+
+  cities.forEach((city) => {
+    const button = document.createElement("button");
+    button.classList.add("city-button");
+    button.textContent = `${city.name}, ${city.country}`;
+
+    button.addEventListener("click", () => {
+      startCity(city.id);
+    });
+
+    cityList.appendChild(button);
+  });
+}
+
+function useCurrentLocation() {
+  console.log("useCurrentLocation wurde gestartet");
+
+  if (!navigator.geolocation) {
+    locationStatus.textContent = "Dein Browser unterstützt keine Standortfreigabe.";
+    console.error("Geolocation wird nicht unterstützt.");
+    return;
+  }
+
+  locationStatus.textContent = "Standort wird ermittelt...";
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      console.log("Standort erhalten:", position.coords.latitude, position.coords.longitude);
+
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+      const nearestCity = findNearestCity(userLocation);
+
+      console.log("Nächste Stadt:", nearestCity);
+
+      if (!nearestCity) {
+        locationStatus.textContent = "Es konnte keine passende Stadt gefunden werden.";
+        return;
+      }
+
+      locationStatus.textContent = `Nächste Stadt erkannt: ${nearestCity.name}`;
+
+      startCity(nearestCity.id);
+    },
+    (error) => {
+      console.error("Standortfehler:", error);
+
+      if (error.code === 1) {
+        locationStatus.textContent = "Standortfreigabe wurde blockiert oder abgelehnt.";
+      } else if (error.code === 2) {
+        locationStatus.textContent = "Standort konnte nicht ermittelt werden.";
+      } else if (error.code === 3) {
+        locationStatus.textContent = "Standortermittlung hat zu lange gedauert.";
+      } else {
+        locationStatus.textContent = "Unbekannter Fehler bei der Standortermittlung.";
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+function findNearestCity(userLocation) {
+  if (!cities || cities.length === 0) {
+    console.error("Keine Städte verfügbar in cities.js gefunden.");
+    return null;
+  }
+
+  let nearestCity = cities[0];
+  let nearestDistance = calculateDistanceInKm(userLocation, cities[0]);
+
+  for (let i = 1; i < cities.length; i++) {
+    const distance = calculateDistanceInKm(userLocation, cities[i]);
+
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestCity = cities[i];
+    }
+  }
+
+  console.log("Entfernung zum nächsten Stadtzentrum:", nearestDistance.toFixed(2), "km");
+
+  return nearestCity;
+}
+
+function startCity(cityId) {
+  currentCity = cities.find((city) => city.id === cityId);
+  places = placesByCity[cityId] || [];
+
+  if (!currentCity) {
+    alert("Die ausgewählte Stadt wurde nicht gefunden.");
+    return;
+  }
+
+  if (places.length === 0) {
+    alert(`Für ${currentCity.name} sind noch keine Sehenswürdigkeiten hinterlegt.`);
+    return;
+  }
+
   currentIndex = 0;
   likedPlaces = [];
+
+  startLocation.name = `${currentCity.name} Zentrum`;
+  startLocation.lat = currentCity.lat;
+  startLocation.lng = currentCity.lng;
+
+  selectedCount.textContent = "";
+  startPoint.textContent = "";
+  totalRouteInfo.textContent = "";
+  routeList.innerHTML = "";
+  progressBar.style.width = "0%";
+
+  clearRouteMap();
+  resetCardPosition();
 
   showScreen(swipeScreen);
   renderCurrentPlace();
@@ -289,14 +417,14 @@ function createRouteListItem(segment, index) {
   const templateContent = routeItemTemplate.content.cloneNode(true);
 
   const stepNumber = templateContent.querySelector(".route-step-number");
-  const placeName = templateContent.querySelector(".route-place-name");
-  const placeCategory = templateContent.querySelector(".route-place-category");
-  const placeDistance = templateContent.querySelector(".route-place-distance");
+  const placeNameElement = templateContent.querySelector(".route-place-name");
+  const placeCategoryElement = templateContent.querySelector(".route-place-category");
+  const placeDistanceElement = templateContent.querySelector(".route-place-distance");
 
   stepNumber.textContent = index + 1;
-  placeName.textContent = segment.to.name;
-  placeCategory.textContent = segment.to.category;
-  placeDistance.textContent =
+  placeNameElement.textContent = segment.to.name;
+  placeCategoryElement.textContent = segment.to.category;
+  placeDistanceElement.textContent =
     `von ${segment.from.name}: ${segment.distanceKm.toFixed(1)} km · ca. ${segment.walkingMinutes} Min.`;
 
   return templateContent;
@@ -454,6 +582,8 @@ function showScreen(screenToShow) {
 function restartApp() {
   stopImageSlider();
 
+  currentCity = null;
+  places = [];
   currentIndex = 0;
   likedPlaces = [];
   routeList.innerHTML = "";
@@ -463,7 +593,7 @@ function restartApp() {
   totalRouteInfo.textContent = "";
 
   progressBar.style.width = "0%";
-  
+
   clearRouteMap();
   resetCardPosition();
   showScreen(startScreen);

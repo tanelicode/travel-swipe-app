@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Travel Swipe Hamburg</title>
+  <title>Travel Swipe</title>
 
   <link
     rel="stylesheet"
@@ -22,12 +22,56 @@
       <h1>Travel Swipe</h1>
 
       <p class="intro-text">
-        Entdecke Sehenswürdigkeiten per Swipe und erstelle daraus automatisch deine persönliche Route.
+        Wähle eine Stadt oder nutze deinen Standort, um passende Sehenswürdigkeiten in deiner Nähe zu entdecken.
       </p>
 
-      <button id="select-hamburg-btn" class="primary-btn">
-        Hamburg entdecken
+      <button id="use-location-btn" class="location-btn" type="button">
+        📍 Standort verwenden
       </button>
+
+      <p id="location-status" class="location-status"></p>
+
+      <div id="city-list" class="city-list"></div>
+    </section>
+
+    <section id="swipe-screen" class="screen">
+      <header class="top-bar">
+        <div class="top-row">
+          <div>
+            <h2 id="city-title">Sehenswürdigkeiten</h2>
+            <span id="city-badge" class="city-badge">📍 Stadt auswählen</span>
+          </div>
+        </div>
+
+        <p id="progress-text">1 von 20 bewertet</p>
+
+        <div class="progress-track">
+          <div id="progress-bar"></div>
+        </div>
+      </header>
+
+      <div id="card" class="card">
+        <div class="image-slider">
+          <img id="place-image" src="" alt="Sehenswürdigkeit" />
+          <div id="image-dots" class="image-dots"></div>
+        </div>
+
+        <div class="card-content">
+          <span id="place-category"></span>
+          <h3 id="place-name"></h3>
+          <p id="place-description"></p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="dislike-btn" class="dislike-btn" type="button">
+          ✕ Gefällt mir nicht
+        </button>
+
+        <button id="like-btn" class="like-btn" type="button">
+          ✓ Gefällt mir
+        </button>
+      </div>
     </section>
 
     <section id="result-screen" class="screen">
@@ -57,60 +101,7 @@
         </li>
       </template>
 
-      <button id="restart-btn" class="secondary-btn">
-        Neu starten
-      </button>
-    </section>
-
-    <section id="swipe-screen" class="screen">
-      <header class="top-bar">
-        <div class="top-row">
-          <div>
-            <h2 id="city-title">20 Sehenswürdigkeiten</h2>
-            <span class="city-badge">📍 Hamburg</span>
-          </div>
-        </div>
-
-        <p id="progress-text">1 von 20 bewertet</p>
-
-        <div class="progress-track">
-          <div id="progress-bar"></div>
-        </div>
-      </header>
-
-      <div id="card" class="card">
-        <div class="image-slider">
-          <img id="place-image" src="" alt="Sehenswürdigkeit" />
-          <div id="image-dots" class="image-dots"></div>
-        </div>
-
-        <div class="card-content">
-          <span id="place-category"></span>
-          <h3 id="place-name"></h3>
-          <p id="place-description"></p>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="dislike-btn" class="dislike-btn">
-          ✕ Gefällt mir nicht
-        </button>
-
-        <button id="like-btn" class="like-btn">
-          ✓ Gefällt mir
-        </button>
-      </div>
-    </section>
-
-    <section id="result-screen" class="screen">
-      <h2>Deine Route</h2>
-
-      <div class="result-card">
-        <p id="result-summary"></p>
-        <ol id="route-list"></ol>
-      </div>
-
-      <button id="restart-btn" class="secondary-btn">
+      <button id="restart-btn" class="secondary-btn" type="button">
         Neu starten
       </button>
     </section>
@@ -118,7 +109,8 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="data/hamburgPlaces.js"></script>
+  <script src="data/cities.js"></script>
+  <script src="data/placesByCity.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
